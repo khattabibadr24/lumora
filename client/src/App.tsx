@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +23,15 @@ function formatPrice(amount: string | number, currency = "MAD") {
 
 function CartDrawer() {
   const { cart, isOpen, closeCart, updateQuantity, removeItem, proceedToCheckout, loading } = useCart();
+  const [customer, setCustomer] = useState({ fullName: "", city: "", phone: "" });
+
+  useEffect(() => {
+    if (!isOpen) {
+      setCustomer({ fullName: "", city: "", phone: "" });
+    }
+  }, [isOpen]);
+
+  const canConfirm = Boolean(customer.fullName.trim() && customer.city.trim() && customer.phone.trim());
 
   if (!isOpen) return null;
 
@@ -62,8 +72,33 @@ function CartDrawer() {
             <div className="drawer-summary">
               <div><span>Sous-total</span><strong>{formatPrice(cart.subtotal.amount, cart.subtotal.currencyCode)}</strong></div>
               <div className="drawer-total"><span>Total estimé</span><strong>{formatPrice(cart.total.amount, cart.total.currencyCode)}</strong></div>
-              <p>Commande enregistrée pour paiement à la livraison. Vous réglez à la réception.</p>
-              <Button className="full-button" onClick={proceedToCheckout}>Confirmer la commande <ArrowRight size={15} /></Button>
+
+              <div style={{ display: "grid", gap: 10, margin: "12px 0" }}>
+                <input
+                  value={customer.fullName}
+                  onChange={event => setCustomer(current => ({ ...current, fullName: event.target.value }))}
+                  placeholder="Nom complet"
+                  aria-label="Nom complet"
+                  style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ddd" }}
+                />
+                <input
+                  value={customer.city}
+                  onChange={event => setCustomer(current => ({ ...current, city: event.target.value }))}
+                  placeholder="Ville"
+                  aria-label="Ville"
+                  style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ddd" }}
+                />
+                <input
+                  value={customer.phone}
+                  onChange={event => setCustomer(current => ({ ...current, phone: event.target.value }))}
+                  placeholder="Téléphone"
+                  aria-label="Téléphone"
+                  style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #ddd" }}
+                />
+              </div>
+
+              <p>Nous allons valider votre commande via WhatsApp. Le paiement se fera à la livraison.</p>
+              <Button className="full-button" onClick={() => proceedToCheckout(customer)} disabled={!canConfirm}>Confirmer la commande <ArrowRight size={15} /></Button>
             </div>
           </>
         ) : (

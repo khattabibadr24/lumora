@@ -10,6 +10,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { toast } from "sonner";
 
 /**
  * Storefront cart context.
@@ -34,6 +35,12 @@ function writeStoredCartId(value: string | null) {
   else window.localStorage.removeItem(CART_STORAGE_KEY);
 }
 
+type CheckoutCustomer = {
+  fullName: string;
+  city: string;
+  phone: string;
+};
+
 type CartContextValue = {
   cart: Cart | null;
   isOpen: boolean;
@@ -45,7 +52,7 @@ type CartContextValue = {
   updateQuantity: (lineId: string, quantity: number) => Promise<void>;
   removeItem: (lineId: string) => Promise<void>;
   clearCart: () => void;
-  proceedToCheckout: () => void;
+  proceedToCheckout: (customer: CheckoutCustomer) => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -201,8 +208,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart(null);
   }, []);
 
-  const proceedToCheckout = useCallback(() => {
+  const proceedToCheckout = useCallback((customer: CheckoutCustomer) => {
     if (!cart) return;
+    const cleanName = customer.fullName.trim();
+    const cleanCity = customer.city.trim();
+    const cleanPhone = customer.phone.trim();
+    if (!cleanName || !cleanCity || !cleanPhone) return;
+    const message = `Nouvelle commande Lumora\nNom: ${cleanName}\nVille: ${cleanCity}\nTéléphone: ${cleanPhone}\nTotal: ${cart.total.amount} ${cart.total.currencyCode}\nPaiement: à la livraison.`;
+    toast.success("Commande reçue", {
+      description: "Nous allons valider votre commande via WhatsApp. Le paiement se fera à la livraison.",
+      duration: 5000,
+    });
+    console.info(message);
     clearCart();
     setIsOpen(false);
   }, [cart, clearCart]);
