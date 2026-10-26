@@ -1,0 +1,34 @@
+# Project TODO
+
+- [x] Identité Lumora responsive et direction visuelle élégante orientée conversion
+- [x] Page d’accueil avec hero, univers, nouveautés, promotions, réassurance et newsletter
+- [x] Header avec recherche, compte, favoris, panier et méga-menu par univers
+- [x] Catalogue avec catégories/sous-catégories, recherche, tri et filtres techniques
+- [x] Fiches produit riches avec galerie, promotions, disponibilité, caractéristiques et recommandations
+- [x] Panier persistant avec quantités, sous-total et total Shopify
+- [x] Handoff vers le checkout Shopify sécurisé pour adresse, livraison, paiement et codes promotionnels
+- [x] Espace client avec authentification, profil, onglets commandes/adresses, favoris persistants et récemment consultés
+- [x] Pages de confiance : contact, à propos, FAQ, CGV, livraison, retours et confidentialité
+- [x] Fondations SEO et performance : métadonnées, données structurées, robots, sitemap, lazy loading et pagination
+- [x] Connexion Shopify pour collections, produits, panier et checkout sécurisé
+- [x] Espace administration protégé par rôle avec catalogue Shopify, stock, promotions et accès au suivi des commandes
+- [x] Tests Vitest et validation responsive du parcours principal
+- [x] Enregistrer commerceRouter et exposer les variables Shopify dans l’environnement serveur
+- [x] Préparer 1 à 2 produits Shopify publiés pour le premier aperçu
+- [x] Vérifier le catalogue Shopify avec le probe et les tests smoke
+- [x] Espace administration avec indicateurs, commandes récentes, stocks et raccourcis catalogue
+- [x] Créer une vraie section homepage promotions et nouveautés reliée aux données produits
+- [x] Implémenter une logique favoris persistante et relier l’icône du header
+- [x] Rendre les filtres catalogue dynamiques à partir des catégories et tags Shopify
+- [x] Brancher la fiche produit sur disponibilité réelle et afficher des recommandations réelles
+- [x] Afficher le total Shopify dans le panier et déléguer les codes promotionnels au checkout Shopify
+- [x] Documenter le checkout Shopify comme flux sécurisé externe avec handoff explicite
+- [x] Ajouter une page dédiée retours
+- [x] Ajouter données structurées Schema.org produit et catégorie
+- [x] Rendre la pagination du catalogue fonctionnelle
+- [x] Implémenter les vues compte commandes/adresses avec états guidés et expliciter leur gestion dans le checkout Shopify
+- [x] Afficher les favoris directement dans l’espace client et relier les produits récents au catalogue Shopify live
+- [x] Sécuriser l’administration par un contrôle de rôle côté serveur
+- [x] Reformuler l’administration comme dashboard catalogue/stock/promotion, avec commandes traitées par le checkout Shopify
+- [x] Clarifier explicitement dans l’onglet commandes que le suivi réel n’est pas exposé dans le storefront actuel
+- [x] Ne pas promettre un suivi futur non implémenté dans les états vides du compte

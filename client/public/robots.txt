@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://lumora.manus.space/sitemap.xml
