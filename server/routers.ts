@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, LOCAL_ADMIN_COOKIE_NAME, LOCAL_ADMIN_EMAIL, LOCAL_ADMIN_PASSWORD } from "@shared/const";
 import { demoProducts } from "@shared/commerce/demo";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
@@ -72,9 +72,47 @@ export const appRouter = router({
   }),
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    localLogin: publicProcedure
+      .input(
+        z.object({
+          email: z.string().trim().email(),
+          password: z.string().min(6),
+        })
+      )
+      .mutation(({ input, ctx }) => {
+        if (input.email !== LOCAL_ADMIN_EMAIL || input.password !== LOCAL_ADMIN_PASSWORD) {
+          throw new Error("Identifiants administrateur invalides");
+        }
+
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        const adminSession = {
+          id: 1,
+          openId: "local-admin",
+          name: "Admin Lumora",
+          email: LOCAL_ADMIN_EMAIL,
+          role: "admin",
+        };
+
+        ctx.res.cookie(LOCAL_ADMIN_COOKIE_NAME, JSON.stringify(adminSession), {
+          ...cookieOptions,
+          httpOnly: true,
+          secure: cookieOptions.secure,
+          maxAge: 60 * 60 * 24 * 7,
+        });
+
+        return {
+          id: adminSession.id,
+          openId: adminSession.openId,
+          name: adminSession.name,
+          email: adminSession.email,
+          loginMethod: "local-admin",
+          role: "admin",
+        } as const;
+      }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      ctx.res.clearCookie(LOCAL_ADMIN_COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return {
         success: true,
       } as const;

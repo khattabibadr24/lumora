@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { ArrowUpRight, Box, Check, CircleAlert, LayoutDashboard, LogIn, Package, Pencil, Plus, Save, ShoppingCart, Trash2, X } from "lucide-react";
+import { ArrowUpRight, Box, Check, CircleAlert, Eye, EyeOff, LayoutDashboard, LogIn, Package, Pencil, Plus, Save, ShoppingCart, Trash2, X } from "lucide-react";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { demoProducts } from "@/data/catalog";
@@ -41,10 +40,25 @@ export default function AdminPage() {
   const productsQuery = trpc.commerce.products.list.useQuery({ first: 50 }, { enabled: adminAccess.data?.ok === true });
   const utils = trpc.useUtils();
   const remove = trpc.admin.products.delete.useMutation({ onSuccess: () => utils.commerce.products.list.invalidate() });
+  const localLogin = trpc.auth.localLogin.useMutation();
   const [editing, setEditing] = useState<Product | undefined>();
   const [creating, setCreating] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+
+  const submitLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      await localLogin.mutateAsync(loginForm);
+      await utils.auth.me.invalidate();
+      window.location.reload();
+    } catch (error) {
+      console.error("Local admin login failed", error);
+    }
+  };
+
   if (authLoading || (user && adminAccess.isLoading)) return <div className="account-loading">Chargement de l’espace administration…</div>;
-  if (!user) return <div className="admin-login-page"><div className="content-hero"><span className="section-kicker"><span className="kicker-line" /> Accès administrateur</span><h1>Le pilotage<br /><em>de Lumora.</em></h1><p>Un seul compte administrateur permet de gérer les articles, les prix et la disponibilité de la boutique.</p><Button onClick={() => startLogin()}><LogIn size={16} /> Se connecter en administrateur</Button></div></div>;
+  if (!user) return <div className="admin-login-page"><div className="content-hero"><span className="section-kicker"><span className="kicker-line" /> Accès administrateur</span><h1>Le pilotage<br /><em>de Lumora.</em></h1><p>Un seul compte administrateur permet de gérer les articles, les prix et la disponibilité de la boutique.</p><form onSubmit={submitLogin} style={{ display: "grid", gap: 12, maxWidth: 420, marginTop: 24 }}><label style={{ display: "grid", gap: 6 }}><span>Email</span><input type="email" value={loginForm.email} onChange={event => setLoginForm(current => ({ ...current, email: event.target.value }))} style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #d7d7d7" }} /></label><label style={{ display: "grid", gap: 6 }}><span>Mot de passe</span><div style={{ position: "relative" }}><input type={showPassword ? "text" : "password"} value={loginForm.password} onChange={event => setLoginForm(current => ({ ...current, password: event.target.value }))} style={{ width: "100%", padding: "10px 42px 10px 12px", borderRadius: 8, border: "1px solid #d7d7d7" }} /><button type="button" aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"} onClick={() => setShowPassword(current => !current)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", color: "#3a3a3a", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }} >{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label><Button type="submit" disabled={localLogin.isPending}><LogIn size={16} /> {localLogin.isPending ? "Connexion…" : "Se connecter"}</Button></form></div></div>;
   if (adminAccess.isError || adminAccess.data?.ok !== true) return <div className="admin-login-page"><div className="content-hero"><span className="section-kicker"><span className="kicker-line" /> Accès refusé</span><h1>Compte non<br /><em>administrateur.</em></h1><p>Ce site ne possède pas de comptes clients. Seul le compte administrateur autorisé peut accéder à cet espace.</p><Link href="/" className="text-link">Retourner à la boutique <ArrowUpRight size={14} /></Link></div></div>;
   const catalog = productsQuery.data?.length ? productsQuery.data : demoProducts;
   const active = catalog.filter(product => product.variants[0]?.availableForSale).length;
