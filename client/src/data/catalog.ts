@@ -11,7 +11,7 @@ export const collections = demoCollections.map((collection, index) => ({
   image: collection.image?.url ?? "",
 }));
 
-export const categoryFilters = ["Spots LED", "Suspensions", "Luminaires", "Éclairage extérieur", "Ampoules LED", "Interrupteurs"];
+export const categoryFilters = ["Spots LED", "Suspensions", "Luminaires", "Éclairage artisanal", "Abat-jour", "Applique", "Lustre", "Plafonnier", "Lampadaire", "Éclairage extérieur", "Ampoules LED", "Interrupteurs"];
 
 export function productFromCatalog(product: Product | undefined) {
   return product ?? null;

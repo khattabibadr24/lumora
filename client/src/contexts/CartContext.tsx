@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+import { buildWhatsAppOrderMessage, getWhatsAppSendUrl } from "@/lib/whatsapp";
 
 /**
  * Storefront cart context.
@@ -208,18 +209,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart(null);
   }, []);
 
-  const proceedToCheckout = useCallback((customer: CheckoutCustomer) => {
+  const proceedToCheckout = useCallback(async (customer: CheckoutCustomer) => {
     if (!cart) return;
     const cleanName = customer.fullName.trim();
     const cleanCity = customer.city.trim();
     const cleanPhone = customer.phone.trim();
     if (!cleanName || !cleanCity || !cleanPhone) return;
-    const message = `Nouvelle commande Lumora\nNom: ${cleanName}\nVille: ${cleanCity}\nTéléphone: ${cleanPhone}\nTotal: ${cart.total.amount} ${cart.total.currencyCode}\nPaiement: à la livraison.`;
+
+    const orderNumber = `CMD-${Date.now().toString().slice(-6)}`;
+    const productItems = cart.items.map(item => ({
+      title: item.productTitle,
+      quantity: item.quantity,
+    }));
+    const totalText = `${cart.total.amount} ${cart.total.currencyCode}`;
+    const message = buildWhatsAppOrderMessage({
+      customerName: cleanName,
+      phone: cleanPhone,
+      city: cleanCity,
+      orderNumber,
+      total: totalText,
+      items: productItems,
+    });
+
+    try {
+      const response = await fetch("/api/whatsapp/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: cleanName,
+          phone: cleanPhone,
+          city: cleanCity,
+          orderNumber,
+          total: totalText,
+          items: productItems,
+          message,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        console.warn("[WhatsApp order notification failed]", data);
+      }
+    } catch (error) {
+      console.warn("[WhatsApp order notification error]", error);
+    }
+
     toast.success("Commande reçue", {
       description: "Nous allons valider votre commande via WhatsApp. Le paiement se fera à la livraison.",
       duration: 5000,
     });
-    console.info(message);
+    console.info("[WhatsApp order notification]", message);
     clearCart();
     setIsOpen(false);
   }, [cart, clearCart]);

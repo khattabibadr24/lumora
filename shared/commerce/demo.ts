@@ -9,7 +9,7 @@ export const demoProducts: Product[] = [
     descriptionHtml: "<p>Une suspension sculpturale en finition sable, pensée pour diffuser une lumière douce au-dessus d’une table ou d’un îlot.</p>",
     productType: "Suspensions",
     vendor: "Lumora Studio",
-    tags: ["Éclairage intérieur", "Suspension", "Sable", "2700K", "IP20", "Design"],
+    tags: ["Éclairage intérieur", "Éclairage artisanal", "Suspension", "Sable", "2700K", "IP20", "Design"],
     options: [],
     priceRange: { min: { amount: "1290.00", currencyCode: "MAD" }, max: { amount: "1290.00", currencyCode: "MAD" } },
     images: [

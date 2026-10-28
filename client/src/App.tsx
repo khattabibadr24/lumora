@@ -15,6 +15,7 @@ import Catalog from "./pages/Catalog";
 import ProductPage from "./pages/ProductPage";
 import ContentPage from "./pages/ContentPage";
 import AdminPage from "@/pages/AdminPage";
+import OrdersPage from "@/pages/OrdersPage";
 import FavoritesPage from "./pages/FavoritesPage";
 
 function formatPrice(amount: string | number, currency = "MAD") {
@@ -119,6 +120,7 @@ function Router() {
       <Route path="/catalogue" component={Catalog} />
       <Route path="/produit/:handle" component={ProductPage} />
       <Route path="/admin" component={AdminPage} />
+      <Route path="/admin/commandes" component={OrdersPage} />
       <Route path="/favoris" component={FavoritesPage} />
       <Route path="/:slug" component={ContentPage} />
       <Route path="/404" component={NotFound} />

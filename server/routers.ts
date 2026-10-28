@@ -1,4 +1,4 @@
-import { COOKIE_NAME, LOCAL_ADMIN_COOKIE_NAME, LOCAL_ADMIN_EMAIL, LOCAL_ADMIN_PASSWORD } from "@shared/const";
+import { COOKIE_NAME, LOCAL_ADMIN_COOKIE_NAME, LOCAL_ADMIN_EMAIL, LOCAL_ADMIN_EMAIL_ALIASES, LOCAL_ADMIN_PASSWORD } from "@shared/const";
 import { demoProducts } from "@shared/commerce/demo";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
@@ -6,10 +6,15 @@ import { adminProcedure, publicProcedure, router } from "./_core/trpc";
 import { commerceRouter } from "./routers/commerce";
 import { z } from "zod";
 
+const FAMILY_OPTIONS = ["Éclairage d’intérieur", "Éclairage artisanal", "Accessoires"] as const;
+const TYPE_OPTIONS = ["Abat-jour", "Applique", "Suspension", "Lustre", "Magnétique", "Lampadaire", "Plafonnier"] as const;
+
 const adminProductInput = z.object({
   title: z.string().trim().min(1).max(255),
   descriptionHtml: z.string().max(10000),
-  vendor: z.string().trim().min(1).max(255),
+  vendor: z.string().trim().min(1).max(255).optional().default("Lumora Studio"),
+  family: z.enum(FAMILY_OPTIONS).or(z.string().trim().min(1).max(255)),
+  type: z.enum(TYPE_OPTIONS).or(z.string().trim().min(1).max(255)),
   productType: z.string().trim().min(1).max(255),
   price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Prix invalide"),
   compareAtPrice: z.string().regex(/^\d+(\.\d{1,2})?$/, "Prix comparé invalide").optional().or(z.literal("")),
@@ -28,8 +33,9 @@ export const appRouter = router({
         title: input.title,
         description: input.descriptionHtml,
         descriptionHtml: input.descriptionHtml,
-        vendor: input.vendor,
-        productType: input.productType,
+        vendor: input.vendor ?? "Lumora Studio",
+        productType: input.type || input.productType,
+        tags: Array.from(new Set([input.family, input.type, input.productType].filter(Boolean))),
         priceRange: {
           min: { amount: input.price, currencyCode: "MAD" },
           max: { amount: input.price, currencyCode: "MAD" },
@@ -49,8 +55,9 @@ export const appRouter = router({
         title: input.product.title,
         description: input.product.descriptionHtml,
         descriptionHtml: input.product.descriptionHtml,
-        vendor: input.product.vendor,
-        productType: input.product.productType,
+        vendor: input.product.vendor ?? "Lumora Studio",
+        productType: input.product.type || input.product.productType,
+        tags: Array.from(new Set([input.product.family, input.product.type, input.product.productType].filter(Boolean))),
         priceRange: {
           min: { amount: input.product.price, currencyCode: "MAD" },
           max: { amount: input.product.price, currencyCode: "MAD" },
@@ -80,7 +87,10 @@ export const appRouter = router({
         })
       )
       .mutation(({ input, ctx }) => {
-        if (input.email !== LOCAL_ADMIN_EMAIL || input.password !== LOCAL_ADMIN_PASSWORD) {
+        const normalizedEmail = input.email.trim().toLowerCase();
+        const isValidEmail = LOCAL_ADMIN_EMAIL_ALIASES.some(alias => alias === normalizedEmail);
+
+        if (!isValidEmail || input.password !== LOCAL_ADMIN_PASSWORD) {
           throw new Error("Identifiants administrateur invalides");
         }
 

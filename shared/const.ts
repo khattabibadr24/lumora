@@ -1,6 +1,7 @@
 export const COOKIE_NAME = "app_session_id";
 export const LOCAL_ADMIN_COOKIE_NAME = "lumora_admin_session";
 export const LOCAL_ADMIN_EMAIL = "admin@lumora.ma";
+export const LOCAL_ADMIN_EMAIL_ALIASES = [LOCAL_ADMIN_EMAIL, "admin@lumora.com"] as const;
 export const LOCAL_ADMIN_PASSWORD = "lumora2026";
 export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
 export const AXIOS_TIMEOUT_MS = 30_000;

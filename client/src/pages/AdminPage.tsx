@@ -10,23 +10,38 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { demoProducts } from "@/data/catalog";
 import type { Product } from "@shared/commerce/types";
 
-type FormState = { title: string; descriptionHtml: string; vendor: string; productType: string; price: string; compareAtPrice: string };
-const emptyForm: FormState = { title: "", descriptionHtml: "", vendor: "Lumora Studio", productType: "Suspensions", price: "", compareAtPrice: "" };
+const FAMILY_OPTIONS = ["Éclairage d’intérieur", "Éclairage artisanal", "Accessoires"];
+const TYPE_OPTIONS = ["Abat-jour", "Applique", "Suspension", "Lustre", "Magnétique", "Lampadaire", "Plafonnier"];
+
+type FormState = { title: string; descriptionHtml: string; family: string; type: string; price: string; compareAtPrice: string };
+const emptyForm: FormState = { title: "", descriptionHtml: "", family: "Éclairage d’intérieur", type: "Suspension", price: "", compareAtPrice: "" };
 
 function ProductForm({ initial, onCancel, onSaved }: { initial?: Product; onCancel: () => void; onSaved: () => void }) {
-  const [form, setForm] = useState<FormState>(() => initial ? { title: initial.title, descriptionHtml: initial.descriptionHtml || initial.description, vendor: initial.vendor || "Lumora Studio", productType: initial.productType || "Éclairage", price: initial.variants[0]?.price.amount || initial.priceRange.min.amount, compareAtPrice: initial.variants[0]?.compareAtPrice?.amount || "" } : emptyForm);
+  const [form, setForm] = useState<FormState>(() => {
+    if (!initial) return emptyForm;
+    const family = initial.tags.find(tag => FAMILY_OPTIONS.includes(tag)) ?? "Éclairage d’intérieur";
+    const type = initial.productType || "Suspension";
+    return {
+      title: initial.title,
+      descriptionHtml: initial.descriptionHtml || initial.description,
+      family,
+      type: TYPE_OPTIONS.includes(type) ? type : "Suspension",
+      price: initial.variants[0]?.price.amount || initial.priceRange.min.amount,
+      compareAtPrice: initial.variants[0]?.compareAtPrice?.amount || "",
+    };
+  });
   const create = trpc.admin.products.create.useMutation();
   const update = trpc.admin.products.update.useMutation();
   const mutation = initial ? update : create;
   const set = (key: keyof FormState, value: string) => setForm(current => ({ ...current, [key]: value }));
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const product = { ...form, compareAtPrice: form.compareAtPrice };
+    const product = { ...form, vendor: "Lumora Studio", family: form.family, type: form.type, productType: form.type, compareAtPrice: form.compareAtPrice };
     if (initial) await update.mutateAsync({ id: initial.id, product });
     else await create.mutateAsync(product);
     onSaved();
   };
-  return <form className="admin-product-form" onSubmit={submit}><div className="admin-form-heading"><div><span className="admin-label">{initial ? "Modifier l’article" : "Nouvel article"}</span><h2>{initial ? initial.title : "Ajouter une pièce"}</h2></div><button type="button" className="icon-button" onClick={onCancel} aria-label="Fermer"><X size={18} /></button></div><label>Nom de l’article<Input required value={form.title} onChange={event => set("title", event.target.value)} /></label><div className="admin-form-row"><label>Famille<Input required value={form.productType} onChange={event => set("productType", event.target.value)} /></label><label>Marque<Input required value={form.vendor} onChange={event => set("vendor", event.target.value)} /></label></div><div className="admin-form-row"><label>Prix (MAD)<Input required inputMode="decimal" value={form.price} onChange={event => set("price", event.target.value)} /></label><label>Prix comparé (optionnel)<Input inputMode="decimal" value={form.compareAtPrice} onChange={event => set("compareAtPrice", event.target.value)} /></label></div><label>Description<Textarea required rows={5} value={form.descriptionHtml} onChange={event => set("descriptionHtml", event.target.value)} /></label>{mutation.error && <p className="admin-form-error"><CircleAlert size={14} /> {mutation.error.message}</p>}<div className="admin-form-actions"><Button type="button" variant="outline" onClick={onCancel}>Annuler</Button><Button type="submit" disabled={mutation.isPending}><Save size={15} /> {mutation.isPending ? "Enregistrement…" : initial ? "Enregistrer" : "Créer l’article"}</Button></div></form>;
+  return <form className="admin-product-form" onSubmit={submit}><div className="admin-form-heading"><div><span className="admin-label">{initial ? "Modifier l’article" : "Nouvel article"}</span><h2>{initial ? initial.title : "Ajouter une pièce"}</h2></div><button type="button" className="icon-button" onClick={onCancel} aria-label="Fermer"><X size={18} /></button></div><label>Nom de l’article<Input required value={form.title} onChange={event => set("title", event.target.value)} /></label><div className="admin-form-row"><label>Famille<select required value={form.family} onChange={event => set("family", event.target.value)}><option value="">Sélectionner</option>{FAMILY_OPTIONS.map(option => <option key={option} value={option}>{option}</option>)}</select></label><label>Type<select required value={form.type} onChange={event => set("type", event.target.value)}><option value="">Sélectionner</option>{TYPE_OPTIONS.map(option => <option key={option} value={option}>{option}</option>)}</select></label></div><div className="admin-form-row"><label>Prix (MAD)<Input required inputMode="decimal" value={form.price} onChange={event => set("price", event.target.value)} /></label><label>Prix comparé (optionnel)<Input inputMode="decimal" value={form.compareAtPrice} onChange={event => set("compareAtPrice", event.target.value)} /></label></div><label>Description<Textarea required rows={5} value={form.descriptionHtml} onChange={event => set("descriptionHtml", event.target.value)} /></label>{mutation.error && <p className="admin-form-error"><CircleAlert size={14} /> {mutation.error.message}</p>}<div className="admin-form-actions"><Button type="button" variant="outline" onClick={onCancel}>Annuler</Button><Button type="submit" disabled={mutation.isPending}><Save size={15} /> {mutation.isPending ? "Enregistrement…" : initial ? "Enregistrer" : "Créer l’article"}</Button></div></form>;
 }
 
 function ProductRow({ product, onEdit, onDelete }: { product: Product; onEdit: () => void; onDelete: () => void }) {
@@ -44,7 +59,7 @@ export default function AdminPage() {
   const [editing, setEditing] = useState<Product | undefined>();
   const [creating, setCreating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [loginForm, setLoginForm] = useState({ email: "admin@lumora.ma", password: "" });
 
   const submitLogin = async (event: React.FormEvent) => {
     event.preventDefault();
